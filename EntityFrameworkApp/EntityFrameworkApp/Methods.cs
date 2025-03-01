@@ -142,6 +142,21 @@ namespace EntityFrameworkApp
                 }
             }
         }
+        public static void ShowExercises()
+        {
+            using var db = new AppDbContext();
+            var exercises = db.Exercises.Include(e => e.DoneExercises).ToList();
+            foreach (var exercise in exercises)
+            {
+                Console.WriteLine($"Exercise: {exercise.Name}");
+                Console.WriteLine($"Personal record: {exercise.PersonalRecord}");
+                Console.WriteLine("Done exercises:");
+                foreach (var doneExercise in exercise.DoneExercises)
+                {
+                    Console.WriteLine($"- {doneExercise.Weight}kg {doneExercise.Repetitions}x{doneExercise.Sets}");
+                }
+            }
+        }
 
 
     }

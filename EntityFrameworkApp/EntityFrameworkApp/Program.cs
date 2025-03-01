@@ -20,7 +20,8 @@ namespace EntityFrameworkApp
                     Console.WriteLine("3 - Add exercise");
                     Console.WriteLine("4 - Show trainnings");
                     Console.WriteLine("5 - Show training plans");
-                    Console.WriteLine("6 - Exit");
+                    Console.WriteLine("6 - Show exercises");
+                    Console.WriteLine("7 - Exit");
                     Console.WriteLine("Choose an option");
                     int option = int.Parse(Console.ReadLine());
                     switch (option)
@@ -41,6 +42,9 @@ namespace EntityFrameworkApp
                             Methods.ShowTrainningPlans();
                             break;
                         case 6:
+                            Methods.ShowExercises();
+                            break;
+                        case 7:
                             return;
                     }
                 }
