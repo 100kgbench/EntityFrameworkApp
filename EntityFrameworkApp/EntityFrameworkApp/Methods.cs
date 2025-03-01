@@ -9,7 +9,7 @@ namespace EntityFrameworkApp
 {
     class Methods
     {
-        public void AddTrainning()
+        public static void AddTrainning()
         {
             using var db = new AppDbContext();
 
@@ -66,7 +66,7 @@ namespace EntityFrameworkApp
             db.SaveChanges();
             Console.WriteLine("Trainning and done exercises succesfully saved");
         }
-        public void AddTrainningPlan()
+        public static void AddTrainningPlan()
         {
             using var db = new AppDbContext();
 
@@ -84,7 +84,7 @@ namespace EntityFrameworkApp
             db.SaveChanges();
             Console.WriteLine("Trainning plan succesfully saved");
         }
-        public void AddExercise()
+        public static void AddExercise()
         {
             using var db = new AppDbContext();
             Console.WriteLine("Enter name of new exercise");
@@ -98,7 +98,7 @@ namespace EntityFrameworkApp
                 Console.WriteLine($"{plan.TrainningPlanId} - {plan.Name}");
             }
             int planId = int.Parse(Console.ReadLine());
-            var chosenPlan = plans[planId];
+            var chosenPlan = plans[planId - 1];
             var newExercise = new Exercise
             {
                 Name = name,
@@ -109,7 +109,7 @@ namespace EntityFrameworkApp
             db.SaveChanges();
             Console.WriteLine("Exercise succesfully saved");
         }
-        public void ShowTrainnings()
+        public static void ShowTrainnings()
         {
             using var db = new AppDbContext();
             var trainnings = db.Trainnings.Include(t => t.DoneExercises).ToList();
@@ -119,6 +119,26 @@ namespace EntityFrameworkApp
                 foreach (var doneExercise in trainning.DoneExercises)
                 {
                     Console.WriteLine($"- {doneExercise.Exercise.Name} {doneExercise.Weight}kg {doneExercise.Repetitions}x{doneExercise.Sets}");
+                }
+            }
+        }
+        public static void ShowTrainningPlans()
+        {
+            using var db = new AppDbContext();
+            var plans = db.TrainningPlans.Include(p => p.Exercises).Include(p => p.Trainnings).ToList();
+            foreach (var plan in plans)
+            {
+                Console.WriteLine($"\nTrainning plan name: {plan.Name}");
+                Console.WriteLine($"Body part: {plan.BodyPart}");
+                Console.WriteLine("Exercises:");
+                foreach (var exercise in plan.Exercises)
+                {
+                    Console.WriteLine($"- {exercise.Name}");
+                }
+                Console.WriteLine("Trainnings:");
+                foreach (var trainning in plan.Trainnings)
+                {
+                    Console.WriteLine($"- {trainning.Date}");
                 }
             }
         }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using EntityFrameworkApp;
 
 namespace EntityFrameworkApp
 {
@@ -9,7 +10,42 @@ namespace EntityFrameworkApp
 
         static void Main(string[] args)
         {
-            //aa
+            using (var db = new AppDbContext())
+            {
+                db.Database.EnsureCreated();
+                while (true)
+                {
+                    Console.WriteLine("\n1 - Add trainning plan");
+                    Console.WriteLine("2 - Add trainning");
+                    Console.WriteLine("3 - Add exercise");
+                    Console.WriteLine("4 - Show trainnings");
+                    Console.WriteLine("5 - Show training plans");
+                    Console.WriteLine("6 - Exit");
+                    Console.WriteLine("Choose an option");
+                    int option = int.Parse(Console.ReadLine());
+                    switch (option)
+                    {
+                        case 1:
+                            Methods.AddTrainningPlan();
+                            break;
+                        case 2:
+                            Methods.AddTrainning();
+                            break;
+                        case 3:
+                            Methods.AddExercise();
+                            break;
+                        case 4:
+                            Methods.ShowTrainnings();
+                            break;
+                        case 5:
+                            Methods.ShowTrainningPlans();
+                            break;
+                        case 6:
+                            return;
+                    }
+                }
+            }
+
         }
     }
 }
