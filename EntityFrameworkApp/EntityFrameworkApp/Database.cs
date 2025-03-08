@@ -12,8 +12,8 @@ namespace EntityFrameworkApp
     public class TrainningPlan
     {
         public int TrainningPlanId { get; set; }
-        public string Name { get; set; }
-        public string BodyPart { get; set; }
+        public required string Name { get; set; }
+        public required string BodyPart { get; set; }
 
         public List<Exercise> Exercises { get; set; } = new List<Exercise>();
         public List<Trainning> Trainnings { get; set; } = new List<Trainning>();
@@ -21,8 +21,8 @@ namespace EntityFrameworkApp
     public class Exercise
     {
         public int ExerciseId { get; set; }
-        public string Name { get; set; }
-        public double PersonalRecord { get; set; }
+        public required string Name { get; set; }
+        public required double PersonalRecord { get; set; }
         public int TrainningPlanId { get; set; }
         public TrainningPlan TrainningPlan { get; set; }
         public List<DoneExercise> DoneExercises { get; set; } = new List<DoneExercise>();

@@ -9,21 +9,39 @@ namespace EntityFrameworkApp
 {
     class Methods
     {
-        public static void AddTrainning()
+        public async Task AddTrainning()
         {
             using var db = new AppDbContext();
 
             Console.WriteLine("Enter date of the trainning (YYYY-MM-DD)");
             DateTime date = DateTime.Parse(Console.ReadLine());
-            var plans = db.TrainningPlans.ToList();
+
+
+            var isDateTimeFormat = DateTime.TryParse(Console.ReadLine(), out var inputDate);
+
+            DateTime dateInput;
+            if (isDateTimeFormat)
+            {
+                dateInput = inputDate;
+            }
+            else
+            {
+                Console.WriteLine("Invalid date format");
+                return;
+            }
+            
+            
+            
+            var trainingPlans = await db.TrainningPlans.ToListAsync();
             Console.WriteLine("Trainning plans:");
-            foreach (var plan in plans)
+            foreach (var plan in trainingPlans)
             {
                 Console.WriteLine($"{plan.TrainningPlanId} - {plan.Name}");
             }
             Console.WriteLine("Enter the id of the trainning plan");
             int planId = int.Parse(Console.ReadLine());
-            var chosenPlan = plans[planId];
+            var chosenPlan = trainingPlans[planId - 1];
+            var chosenPlan1 = trainingPlans.FirstOrDefault(p => p.TrainningPlanId == planId);
 
             var newTrainning = new Trainning
             {
@@ -31,9 +49,10 @@ namespace EntityFrameworkApp
                 TrainningPlanId = chosenPlan.TrainningPlanId
 
             };
-            db.Trainnings.Add(newTrainning);
-            db.SaveChanges();
 
+            db.Trainnings.Add(newTrainning);
+            await db.SaveChangesAsync();
+            
             var exercises = db.Exercises.Where(e => e.TrainningPlanId == chosenPlan.TrainningPlanId).ToList();
             Console.WriteLine("Exercises in this trainning plan");
             foreach (var exercise in exercises)

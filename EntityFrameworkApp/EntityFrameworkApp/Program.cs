@@ -24,13 +24,15 @@ namespace EntityFrameworkApp
                     Console.WriteLine("7 - Exit");
                     Console.WriteLine("Choose an option");
                     int option = int.Parse(Console.ReadLine());
+                    var methods = new Methods();
+
                     switch (option)
                     {
                         case 1:
                             Methods.AddTrainningPlan();
                             break;
                         case 2:
-                            Methods.AddTrainning();
+                            Task.FromResult(methods.AddTrainning());
                             break;
                         case 3:
                             Methods.AddExercise();
