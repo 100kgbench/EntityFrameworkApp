@@ -54,6 +54,8 @@ namespace EntityFrameworkApp
         public DbSet<Trainning> Trainnings { get; set; }
         public DbSet<DoneExercise> DoneExercises { get; set; }
 
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlite("Data Source=EntityFrameworkApp.db");

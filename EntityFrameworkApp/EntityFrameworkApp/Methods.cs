@@ -7,176 +7,164 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EntityFrameworkApp
 {
-    class Methods
+
+    public class Methods
     {
-        public async Task AddTrainning()
+        private readonly DbContextOptions<AppDbContext> _options;
+
+        public Methods(DbContextOptions<AppDbContext> options)
         {
-            using var db = new AppDbContext();
+            _options = options;
+        }
 
-            Console.WriteLine("Enter date of the trainning (YYYY-MM-DD)");
-            DateTime date = DateTime.Parse(Console.ReadLine());
+        public async Task<Trainning> AddTrainning(AddTrainningRequest request)
+        {
 
+            using var db = new AppDbContext(_options);
 
-            var isDateTimeFormat = DateTime.TryParse(Console.ReadLine(), out var inputDate);
+            var trainningPlan = await db.TrainningPlans
+                .Include(tp => tp.Exercises)
+                .FirstOrDefaultAsync(tp => tp.TrainningPlanId == request.TrainningPlanId);
 
-            DateTime dateInput;
-            if (isDateTimeFormat)
+            if (trainningPlan == null)
             {
-                dateInput = inputDate;
+                throw new Exception("Trainning plan not found.");
             }
-            else
-            {
-                Console.WriteLine("Invalid date format");
-                return;
-            }
-            
-            
-            
-            var trainingPlans = await db.TrainningPlans.ToListAsync();
-            Console.WriteLine("Trainning plans:");
-            foreach (var plan in trainingPlans)
-            {
-                Console.WriteLine($"{plan.TrainningPlanId} - {plan.Name}");
-            }
-            Console.WriteLine("Enter the id of the trainning plan");
-            int planId = int.Parse(Console.ReadLine());
-            var chosenPlan = trainingPlans[planId - 1];
-            var chosenPlan1 = trainingPlans.FirstOrDefault(p => p.TrainningPlanId == planId);
-
+            ShowTrainningPlans();
             var newTrainning = new Trainning
             {
-                Date = date,
-                TrainningPlanId = chosenPlan.TrainningPlanId
-
+                Date = request.Date,
+                TrainningPlanId = request.TrainningPlanId,
+                TrainningPlan = trainningPlan,
+                DoneExercises = new List<DoneExercise>()
             };
 
-            db.Trainnings.Add(newTrainning);
-            await db.SaveChangesAsync();
-            
-            var exercises = db.Exercises.Where(e => e.TrainningPlanId == chosenPlan.TrainningPlanId).ToList();
-            Console.WriteLine("Exercises in this trainning plan");
-            foreach (var exercise in exercises)
+            foreach (var exerciseDone in request.DoneExercises)
             {
-                Console.WriteLine($"- {exercise.Name}");
-                Console.WriteLine("Enter the weight");
-                double weight = double.Parse(Console.ReadLine());
-                if(weight > exercise.PersonalRecord)
+                var exercise = await db.Exercises.FirstOrDefaultAsync(e => e.ExerciseId == exerciseDone.ExerciseId);
+                if (exercise == null)
                 {
-                    Console.WriteLine("You hit new Personal Best");
-                    exercise.PersonalRecord = weight;
-                    db.SaveChanges();
-                    Console.WriteLine($"New Personal Best is now:{weight} ");
+                    throw new Exception("Exercise not found.");
                 }
-                Console.WriteLine("Enter the repetitions");
-                int repetitions = int.Parse(Console.ReadLine());
-                Console.WriteLine("Enter the sets");
-                int sets = int.Parse(Console.ReadLine());
-
                 var doneExercise = new DoneExercise
                 {
                     ExerciseId = exercise.ExerciseId,
-                    TrainningId = newTrainning.TrainningId,
-                    Weight = weight,
-                    Repetitions = repetitions,
-                    Sets = sets
+                    Exercise = exercise,
+                    Trainning = newTrainning,
+                    Weight = exerciseDone.Weight,
+                    Repetitions = exerciseDone.Repetitions,
+                    Sets = exerciseDone.Sets
                 };
-                db.DoneExercises.Add(doneExercise);
+                newTrainning.DoneExercises.Add(doneExercise);
             }
-            db.SaveChanges();
-            Console.WriteLine("Trainning and done exercises succesfully saved");
+            db.Trainnings.Add(newTrainning);
+            await db.SaveChangesAsync();
+
+            return newTrainning;
+
         }
-        public static void AddTrainningPlan()
+        public async Task<TrainningPlan> AddTrainningPlan(AddTrainningPlanRequest request)
         {
-            using var db = new AppDbContext();
+            using var db = new AppDbContext(_options);
 
-            Console.WriteLine("Enter the name of the trainning plan");
-            string name = Console.ReadLine();
-            Console.WriteLine("Enter the body part");
-            string bodyPart = Console.ReadLine();
-
-            var newTrainningPlan = new TrainningPlan
+            var trainningPlan = new TrainningPlan
             {
-                Name = name,
-                BodyPart = bodyPart
+                Name = request.Name,
+                BodyPart = request.BodyPart
+            }
+            ;
+            db.TrainningPlans.Add(trainningPlan);
+            await db.SaveChangesAsync();
+
+            return trainningPlan;
+
+
+        }
+        public async Task<Exercise> AddExercise(AddExerciseRequest request)
+        {
+            using var db = new AppDbContext(_options);
+            var exercise = new Exercise
+            {
+                Name = request.Name,
+                PersonalRecord = request.PersonalRecord,
+                TrainningPlanId = request.TrainningPlanId
             };
-            db.TrainningPlans.Add(newTrainningPlan);
-            db.SaveChanges();
-            Console.WriteLine("Trainning plan succesfully saved");
-        }
-        public static void AddExercise()
-        {
-            using var db = new AppDbContext();
-            Console.WriteLine("Enter name of new exercise");
-            string name = Console.ReadLine();
-            Console.WriteLine("Enter personal record");
-            double personalRecord = double.Parse(Console.ReadLine());
-            var plans = db.TrainningPlans.ToList();
-            Console.WriteLine("Enter which trainning plan it should be added to:");
-            foreach (var plan in plans)
-            {
-                Console.WriteLine($"{plan.TrainningPlanId} - {plan.Name}");
-            }
-            int planId = int.Parse(Console.ReadLine());
-            var chosenPlan = plans[planId - 1];
-            var newExercise = new Exercise
-            {
-                Name = name,
-                PersonalRecord = personalRecord,
-                TrainningPlanId = chosenPlan.TrainningPlanId
-            };
-            db.Exercises.Add(newExercise);
-            db.SaveChanges();
-            Console.WriteLine("Exercise succesfully saved");
-        }
-        public static void ShowTrainnings()
-        {
-            using var db = new AppDbContext();
-            var trainnings = db.Trainnings.Include(t => t.DoneExercises).ToList();
-            foreach (var trainning in trainnings)
-            {
-                Console.WriteLine($"Trainning on {trainning.Date}");
-                foreach (var doneExercise in trainning.DoneExercises)
-                {
-                    Console.WriteLine($"- {doneExercise.Exercise.Name} {doneExercise.Weight}kg {doneExercise.Repetitions}x{doneExercise.Sets}");
-                }
-            }
-        }
-        public static void ShowTrainningPlans()
-        {
-            using var db = new AppDbContext();
-            var plans = db.TrainningPlans.Include(p => p.Exercises).Include(p => p.Trainnings).ToList();
-            foreach (var plan in plans)
-            {
-                Console.WriteLine($"\nTrainning plan name: {plan.Name}");
-                Console.WriteLine($"Body part: {plan.BodyPart}");
-                Console.WriteLine("Exercises:");
-                foreach (var exercise in plan.Exercises)
-                {
-                    Console.WriteLine($"- {exercise.Name}");
-                }
-                Console.WriteLine("Trainnings:");
-                foreach (var trainning in plan.Trainnings)
-                {
-                    Console.WriteLine($"- {trainning.Date}");
-                }
-            }
-        }
-        public static void ShowExercises()
-        {
-            using var db = new AppDbContext();
-            var exercises = db.Exercises.Include(e => e.DoneExercises).ToList();
-            foreach (var exercise in exercises)
-            {
-                Console.WriteLine($"Exercise: {exercise.Name}");
-                Console.WriteLine($"Personal record: {exercise.PersonalRecord}");
-                Console.WriteLine("Done exercises:");
-                foreach (var doneExercise in exercise.DoneExercises)
-                {
-                    Console.WriteLine($"- {doneExercise.Weight}kg {doneExercise.Repetitions}x{doneExercise.Sets}");
-                }
-            }
-        }
+            db.Exercises.Add(exercise);
+            await db.SaveChangesAsync();
+
+            return exercise;
 
 
+
+        }
+        public async Task<List<object>> ShowTrainnings()
+        {
+            using var db = new AppDbContext(_options);
+            var trainningData = await db.Trainnings
+                .Include(t => t.DoneExercises)
+                .ThenInclude(de => de.Exercise)
+                .ToListAsync();
+
+            var trainningResponse = trainningData.Select(trainning => (object)new
+            {
+                trainning.Date,
+                DoneExercises = trainning.DoneExercises.Select(de => new
+                {
+                    de.Exercise.Name,
+                    de.Weight,
+                    de.Repetitions,
+                    de.Sets
+
+                }).ToList()
+            }).ToList();
+
+            return trainningResponse;
+
+
+
+        }
+        public async Task<List<object>> ShowTrainningPlans()
+        {
+            using var db = new AppDbContext(_options);
+            var plans = await db.TrainningPlans
+                .Include(p => p.Exercises)
+                .Include(p => p.Trainnings)
+                .ToListAsync();
+
+
+            var plansResponse = plans.Select(plan => (object)new
+            {
+
+                plan.Name,
+                plan.BodyPart,
+                Exercises = plan.Exercises.Select(e => e.Name),
+                Trainnings = plan.Trainnings.Select(t => t.Date)
+
+            }).ToList();
+
+            return plansResponse;
+
+        }
+        public async Task<List<object>> ShowExercises()
+        {
+
+            using var db = new AppDbContext(_options);
+
+            var exercisesData = await db.Exercises
+                .Include(e => e.TrainningPlan)
+                .ToListAsync();
+
+            var exercisesResponse = exercisesData.Select(exercise => (object)new
+            {
+                exercise.Name,
+                exercise.PersonalRecord,
+                TrainningPlanName = exercise.TrainningPlan.Name,
+            }).ToList();
+
+
+            return exercisesResponse;
+
+
+        }
     }
 }
