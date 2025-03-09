@@ -22,16 +22,10 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<AppDbContext>(options =>
    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Pøidání DbContextu pro SQLite
-//builder.Services.AddDbContext<AppDbContext>(options =>
-//  options.UseSqlite("Data Source=EntityFrameworkApp.db"));
-
-// Registrace tøíd pro Dependency Injection
 builder.Services.AddScoped<Methods>();
 
 var app = builder.Build();
 
-// Konfigurace HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -42,4 +36,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.Migrate();
+}
+
+
 app.Run();

@@ -5,6 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using EntityFrameworkApp;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace EntityFrameworkApp
 {
@@ -61,6 +64,15 @@ namespace EntityFrameworkApp
             optionsBuilder.UseSqlite("Data Source=EntityFrameworkApp.db");
         }
 
+    }
+    public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
+    {
+        public AppDbContext CreateDbContext(string[] args)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+            optionsBuilder.UseSqlite("Data Source=EntityFrameworkApp.db");
+            return new AppDbContext(optionsBuilder.Options);
+        }
     }
 
 }
