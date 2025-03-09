@@ -19,7 +19,6 @@ namespace EntityFrameworkApp
 
         public async Task<Trainning> AddTrainning(AddTrainningRequest request)
         {
-
             using var db = new AppDbContext(_options);
 
             var trainningPlan = await db.TrainningPlans
@@ -28,41 +27,45 @@ namespace EntityFrameworkApp
 
             if (trainningPlan == null)
             {
-                throw new Exception("Trainning plan not found.");
+                throw new Exception("Training plan not found.");
             }
-            ShowTrainningPlans();
+
             var newTrainning = new Trainning
             {
                 Date = request.Date,
                 TrainningPlanId = request.TrainningPlanId,
-                TrainningPlan = trainningPlan,
                 DoneExercises = new List<DoneExercise>()
             };
 
             foreach (var exerciseDone in request.DoneExercises)
             {
-                var exercise = await db.Exercises.FirstOrDefaultAsync(e => e.ExerciseId == exerciseDone.ExerciseId);
+                var exercise = await db.Exercises
+                    .FirstOrDefaultAsync(e => e.ExerciseId == exerciseDone.ExerciseId);
+
                 if (exercise == null)
                 {
-                    throw new Exception("Exercise not found.");
+                    throw new Exception($"Exercise with ID {exerciseDone.ExerciseId} not found.");
                 }
+
                 var doneExercise = new DoneExercise
                 {
                     ExerciseId = exercise.ExerciseId,
-                    Exercise = exercise,
-                    Trainning = newTrainning,
+                    TrainningId = newTrainning.TrainningId,
                     Weight = exerciseDone.Weight,
                     Repetitions = exerciseDone.Repetitions,
                     Sets = exerciseDone.Sets
                 };
+
                 newTrainning.DoneExercises.Add(doneExercise);
             }
+
             db.Trainnings.Add(newTrainning);
             await db.SaveChangesAsync();
 
             return newTrainning;
-
         }
+
+       
         public async Task<TrainningPlan> AddTrainningPlan(AddTrainningPlanRequest request)
         {
             using var db = new AppDbContext(_options);
